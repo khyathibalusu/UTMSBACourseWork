@@ -1,0 +1,204 @@
+---
+title: "Marketing Homework 3"
+author: "Khyathi Balusu - kb42482"
+date: "3/2/2020"
+output: word_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Binary Data Regression Models for Bank Customer Attrition 
+
+# Q1
+
+```{r}
+bankRetentionData = read.csv('Bank_Retention_Data.csv')
+```
+
+```{r}
+bankRetentionData$TractID = as.factor(bankRetentionData$TractID)
+```
+
+Logistic Regression
+```{r}
+churnlogit <- glm(bankRetentionData$Churn ~ bankRetentionData$Age + bankRetentionData$Income + bankRetentionData$HomeVal + bankRetentionData$Tenure + bankRetentionData$DirectDeposit + bankRetentionData$Loan + bankRetentionData$Dist + bankRetentionData$MktShare, data = bankRetentionData, family = binomial(link = "logit"))
+summary(churnlogit)
+```
+
+Probit Regression
+```{r}
+churnprobit <- glm(bankRetentionData$Churn ~ bankRetentionData$Age + bankRetentionData$Income + bankRetentionData$HomeVal + bankRetentionData$Tenure + bankRetentionData$DirectDeposit + bankRetentionData$Loan + bankRetentionData$Dist + bankRetentionData$MktShare, data = bankRetentionData, family = binomial(link = "probit"))
+summary(churnprobit)
+```
+
+<INSERT BETA INTERPRETATIONS>
+
+```{r}
+cat("AIC : ")
+AIC(churnlogit)
+AIC(churnprobit)
+cat("BIC : ")
+BIC(churnlogit)
+BIC(churnprobit)
+```
+
+Probit is slightly better as it's AIC, BIC values are lower.
+
+# Q2
+```{r}
+library(lme4)
+churnrandom <- glmer(Churn ~ (1|TractID) + Age + Income + HomeVal + Tenure + DirectDeposit + Loan + Dist + MktShare, data = bankRetentionData, family=binomial)
+summary(churnrandom)
+```
+
+```{r}
+cat("AIC : ")
+AIC(churnrandom)
+cat("BIC : ")
+BIC(churnrandom)
+```
+From the summary table, we see that 
+Age
+Income
+HomeVal 
+Tenure
+DirectDeposit
+Dist 
+are still statistically significant.
+
+ 
+# Q3
+```{r}
+library(MCMCpack)
+churnmcmchlogit = MCMChlogit(bankRetentionData$Churn ~ bankRetentionData$Age + bankRetentionData$Income + bankRetentionData$HomeVal + bankRetentionData$Tenure + bankRetentionData$DirectDeposit + bankRetentionData$Loan + bankRetentionData$Dist + bankRetentionData$MktShare, data = bankRetentionData, group = 'TractID', random=~1, r=2, R=1, burnin=10000, mcmc=20000, thin=20)
+```
+
+```{r}
+summary(churnmcmchlogit$mcmc[,1:9])
+```
+
+From the summary table, we see that 
+Age, 
+Income, 
+HomeVal, 
+Tenure, 
+DirectDeposit, 
+Loan, 
+Dist  
+MarketShare 
+are statistically significant at the 5% level
+
+
+```{r}
+plot(churnmcmchlogit$mcmc[,3])
+```
+```{r}
+plot(churnmcmchlogit$mcmc[,6])
+```
+
+# Count Data Analysis for Shopping Mall Visits
+
+# Q4
+```{r}
+mallVisitData = read.csv('Mall_visit.csv')
+```
+
+```{r}
+mallVisitData$customerID = as.factor(mallVisitData$customerID)
+```
+
+```{r}
+visit.poisson = glm(Visit ~ Discount + Target + Income + Distant + Gender, data=mallVisitData, family = poisson(link = "log"))
+summary(visit.poisson)
+```
+From the summary table, we see that 
+Discount, 
+Distant, 
+Income, 
+Gender 
+are statistically significant.
+
+
+```{r}
+cat("AIC : ")
+AIC(visit.poisson)
+cat("BIC : ")
+BIC(visit.poisson)
+```
+
+# Q5
+```{r}
+library(lme4)
+visit.poisson.random = glmer(Visit ~ (1|customerID) + Discount + Target + Income + Distant + Gender, data = mallVisitData, family = poisson)
+```
+
+```{r}
+summary(visit.poisson.random)
+```
+
+From the summary table, we see that 
+Discount, 
+Distant, 
+Income 
+are statistically significant. 
+Gender is no more significant
+1, 3, 4   are statistically significant because their p-values are less than 0.05
+
+```{r}
+cat("AIC : ")
+AIC(visit.poisson.random)
+cat("BIC : ")
+BIC(visit.poisson.random)
+```
+
+# Q6
+```{r}
+library(MASS)
+visit.nb <- glm.nb(Visit ~ Discount + Target +  Income + Distant + Gender, data=mallVisitData)
+summary(visit.nb)
+```
+
+From the summary table, we see that 
+Discount, 
+Distant, 
+Income, 
+Gender are statistically significant. 
+
+
+```{r}
+cat("AIC : ")
+AIC(visit.nb)
+cat("BIC : ")
+BIC(visit.nb)
+```
+Best model is random effects model with lowest AIC of 44695
+
+# Q7
+```{r}
+library(MCMCpack)
+mallVisitData.mcmc <- MCMChpoisson(fixed=Visit ~ Discount + Target + Distant + Income + Gender, data=mallVisitData, random=~1, group="customerID", burnin=10000, mcmc=20000, thin=20, r=1, R=diag(1))
+summary(mallVisitData.mcmc$mcmc[,1:6])
+```
+
+Without Random effects: 
+Discount, 
+Distant, 
+Income  
+Gender 
+are significant. Target is insignificant.
+
+With Random effects: 
+Discount, 
+Target, 
+Distant, 
+Income  
+Gender are significant.
+
+
+```{r}
+plot(mallVisitData.mcmc$mcmc[,3])
+```
+

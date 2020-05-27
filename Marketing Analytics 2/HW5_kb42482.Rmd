@@ -1,0 +1,129 @@
+---
+title: "HW5_kb42582"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=TRUE}
+hotel = read.csv("HHonors_booking.csv", header=T)
+str(hotel)
+hotel$customerID = as.factor(hotel$customerID)
+
+
+interval = c( )
+for(i in 1:400) {
+   hotel.i = hotel[hotel$customerID==i,]
+   interval.i = rep(0, 50)
+   sinceBooking = 0
+   for(t in 1:50) {
+       sinceBooking = sinceBooking + 1
+       interval.i[t] = sinceBooking
+       if (hotel.i$Booking[t] == 1) sinceBooking = 0
+   }
+   interval = c(interval, interval.i)
+}
+hotel$Interval = interval       
+head(hotel)
+```
+
+#Q2 - Logistic Model creation
+
+2). Estimate the following logistic regression model using the R function glm( ) 
+
+log(λi(t)/(1- λi(t)) = 0 + 1×Intervalit + 2×Priceit +3×Promotionit 
+                                  + 4×Incomei +5×Genderi 
+                                                   
+And paste results here. How do you interpret 1, 2, 3, 4, 5? Are they statistically significant? Please calculate the AIC and BIC of this model.
+
+Next, we will estimate the model:
+
+log(λi(t)/(1- λi(t)) = 0 + 1×Intervalit + 2×Intervalit2 + 3×Priceit +4×Promotionit 
+                                  + 5×Incomei +6×Genderi 
+
+Use poly(Interval, 2) in the glm() function to represent 1×Intervalit+2×Intervalit2 in  this model. Are 1, , 6 still statistically significant? Please calculate the AIC and BIC of this model.
+
+
+
+```{r, include=TRUE}
+
+# Logistic Regression with linear coefficients for Interval
+hotel.logit1 = glm(Booking~Interval+Price+Promotion+Income+Gender, data=hotel, family=binomial(link="logit"))
+print("The Summary of Logit")
+summary(hotel.logit1)
+
+hotel.logit2 = glm(Booking~poly(Interval,2)+Price+Promotion+Income+Gender, data=hotel, family=binomial(link="logit"))
+print("The Summary of Logit with Square of Interval")
+summary(hotel.logit2)
+
+AIC(hotel.logit1)
+AIC(hotel.logit2)
+BIC(hotel.logit1)
+BIC(hotel.logit2)
+
+```
+
+
+3). Estimate the following cloglog regression model using the R function glm( ) 
+
+log(-log(1- λi(t)) = 0 + 1×Intervalit + 2×Priceit +3×Promotionit 
+                                  + 4×Incomei +5×Genderi 
+                                                   
+Paste results here. Are they statistically significant? How do you interpret 1, 2, 3, 4, 5? Please calculate the AIC and BIC of this model.
+
+```{r, include=TRUE}
+hotel.cloglog1=glm(Booking~Interval+Price+Promotion+Income+Gender, data=hotel, family=binomial(link="cloglog"))
+print("The Summary of C-loglog Model")
+summary(hotel.cloglog1)
+
+AIC(hotel.cloglog1)
+BIC(hotel.cloglog1)
+```
+
+4) Next, we will let the intercept be a random effect 0i in both the logistic and cloglog models
+
+log(λi(t)/(1- λi(t)) = 0i + 1×Intervalit + 2×Priceit +3×Promotionit 
+                                  + 4×Incomei +5×Genderi 
+log(-log(1- λi(t)) = 0i + 1×Intervalit + 2×Priceit +3×Promotionit 
+                                  + 4×Incomei +5×Genderi 
+
+Using the R function glmer() with link="logit"  and link="cloglog" to estimate these two model and paste results here. Please also calculate the AIC and BIC of these two models.
+                                                               
+Based on the AIC's and BIC's of the five models in (2), (3) and (4), which is the best model for the data? 
+```{r, include=TRUE}
+
+library(lme4)
+hotel.logit_re=glmer(Booking~Interval+Price+Promotion+Income+Gender+(1|customerID), data=hotel, family=binomial(link="logit"))
+print("The Summary of logit RE Model")
+summary(hotel.logit_re)
+
+AIC(hotel.logit_re)
+BIC(hotel.logit_re)
+
+
+library(lme4)
+hotel.cloglog_re=glmer(Booking~Interval+Price+Promotion+Income+Gender+(1|customerID), data=hotel, family=binomial(link="cloglog"))
+print("The Summary of cloglog RE Model")
+summary(hotel.cloglog_re)
+
+AIC(hotel.cloglog_re)
+BIC(hotel.cloglog_re)
+
+
+```
+
+
+
+
+
+
+
+
+
+```
+
+## R Markdown
+

@@ -1,0 +1,80 @@
+---
+title: "SCO_Project 6"
+author: "Satya Pachigolla, Haritha Maheshkumar, Aifaz Gowani"
+date: "5/7/2020"
+output: pdf_document
+---
+
+
+## Question 2
+
+states = i,j,k   i = our accumulated score
+                 j = opponents accumulated score
+                 k = current run total
+
+action = R or H (roll or hold)
+
+
+if p1 is the probability of rolling a 1
+
+V(i,j,k) = max[p1(1-V(j,i+1,0)) + p2 V(i,j,k+2) + p3 V(i,j,k+3) + p4 V(i,j,k+4) + p5 V(i,j,k+5) + p6 V(i,j,k+6),(1- V(j,i+k,0))]     
+               
+               
+terminal equations:
+
+V(i,100,k) = 0 (if opponent reaches 100 points)
+V(100,j,k) = 1 (if we reach 100 points)
+V(99,j,k) = 1 (if we reach 99 points and it's our turn to roll)
+
+
+
+
+## Question 3,4
+               
+```{r}
+
+setwd("D:/SPRING SEMESTER/Stochastic Control and Optimization/Projects/Project6")
+rm(list = ls())
+
+gameStrategy <- function(n){
+  
+  goal = n+1  
+
+  ## all index combination possibilities
+  
+  index_possi = expand.grid(seq(goal-2),seq(goal-1)) ## if we reach goal-1 we win.
+  
+  index_possi$sum = index_possi[[1]] + index_possi[[2]]       
+  index_possi = index_possi[order(index_possi$sum, decreasing = TRUE),] ## order in decreasing order so that we solve from backwards
+    
+  V = array(NA, dim=c(goal+5,goal+5,goal+5))   
+  U = array(NA, dim=c(goal+5,goal+5,goal+5))   
+  
+
+  V[goal:(goal+5),,] = 1   ## we win if we have goal+ points
+  V[seq(1,goal-1),goal:(goal+5),] = 0   # we lose if opponent has goal+ points and we are at least one point short
+  V[goal-1,seq(1,goal-1),] = 1 # If we are one point short to the goal and it's our turn now, we will win
+  V[,seq(1,goal-1),goal:(goal+5)] = 1  #if we get reach the goal amount in a turn, we will win
+
+
+  # Loop for U and V matrix
+  for(n in 1:nrow(index_possi)){
+      for(k in (goal):1){
+        i = index_possi[n,1]
+        j = index_possi[n,2]
+        V[i,j,k] = max(((1/6)*(1-V[min(j,goal),i+1,1]) + (1/6)*V[min(i,goal),j,min(k+2,goal)] +(1/6)*V[min(i,goal),j,min(k+3,goal)]
+                   +(1/6)*V[min(i,goal),j,min(k+4,goal)] + (1/6)*V[min(i,goal),j,min(k+5,goal)]+(1/6)*V[min(i,goal),j,min(k+6,goal)]                    ), 1-V[min(j,goal),min(i+max(k-1,1),goal),1] ) 
+        
+        U[i,j,k] = which.max (c( ( (1/6)*(1-V[min(j,goal),i+1,1]) + (1/6)*V[min(i,goal),j,min(k+2,goal)]      
+                   +(1/6)*V[min(i,goal),j,min(k+3,goal)] + (1/6)*V[min(i,goal),j,min(k+4,goal)] +               
+                  (1/6)*V[min(i,goal),j,min(k+5,goal)]+ (1/6)*V[min(i,goal),j,min(k+6,goal)] ), 
+                   1-V[min(j,goal),min(i+max(1,k-1),goal),1] ) )
+      }
+  }
+  save(list = c('V','U'),file = 'VUfile.Rdata')
+  
+}
+
+gameStrategy(100)
+
+```

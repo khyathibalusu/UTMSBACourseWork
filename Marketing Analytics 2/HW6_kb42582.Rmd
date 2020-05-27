@@ -1,0 +1,42 @@
+Discrete Choice Data Analysis
+
+Part-1
+```{r}
+Mallchoice = read.csv("Mall_choice_data.csv", header=T)
+install.packages("mlogit",dependencies = T)
+library(mlogit)
+head(Mallchoice)
+```
+
+```{r}
+Mallchoice.long = mlogit.data(Mallchoice, shape="long", choice="choice", alt.levels=c("1", "2", "3", "4", "0"))
+View(Mallchoice.long)
+```
+
+Part-2
+```{r}
+Mall.m1 = mlogit(choice ~ discount + targeting + distance|income+gender, data = Mallchoice.long, reflevel = "0")
+summary(Mall.m1)
+```
+
+
+Market Share Model
+
+Part-1
+```{r}
+Sodachoice = read.csv("Soda_choice_data.csv", header=T)
+Sodachoice$Brand = as.factor(Sodachoice$Brand)
+soda.ms = Sodachoice[Sodachoice$ProductID!=0,]
+soda0 = Sodachoice$MarketShare[Sodachoice$ProductID==0]
+soda0 = matrix(soda0, length(soda0), 11)
+soda.ms$logMktShrRatio = log(soda.ms$MarketShare/as.vector(t(soda0)))
+head(soda.ms)
+```
+
+Part-2
+```{r}
+soda.m1 = lm(logMktShrRatio ~ Brand + Sugar + Caffeine + Promotion, data = soda.ms)
+summary(soda.m1)
+```
+
+?lm

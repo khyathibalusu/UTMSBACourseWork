@@ -1,0 +1,217 @@
+---
+title: "HW7"
+author: "Khyathi Balusu"
+date: "4/27/2020"
+output: pdf_document
+---
+
+# Question 1
+
+
+The Bellman equation is:
+
+$$V(i,t) = min(c_{i,j} + V(j,t+1)$$
+
+where i = node number at time t
+      t = columns in the picture (we have 4 columns)
+      c = cost of that path
+      V(i,t) = the shortest path from node i at column t to the node 10
+      
+
+## t = 4
+
+$$V(10,4) = 0 $$
+## t = 3
+
+$$ V(6,3) = c_{6,10}+V(10,4) = 3$$
+$$ V(7,3) = c_{7,10}+V(10,4) = 4$$
+
+$$ V(8,3) = c_{8,10}+V(10,4) = 2$$
+$$ V(9,3) = c_{9,10}+V(10,4) = 3$$
+
+## t = 2
+
+$$ V(3,2) = min(c_{3,6}+V(6,3), c_{3,7}+V(7,3))  = min(6, 6) = 6$$
+$$ V(4,2) = min(c_{4,6}+V(6,3), c_{4,8}+V(8,3, c_{4,9}+V(9,3))  = min(7, 4, 8) = 4$$
+$$ V(5,2) = min(c_{5,7}+V(7,3), c_{5,8}+V(8,3))  = min(6, 4) = 4$$
+
+## t = 1
+
+$$ V(1,1) = min(c_{1,3}+V(3,2), c_{1,4}+V(4,2))  = min(9, 6) = 6$$
+$$ V(2,1) = min(c_{2,3}+V(3,2), c_{2,4}+V(4,2), c_{2,5}+V(5,2))  = min(10, 6, 8) = 6$$
+
+Shortest path from:
+
+Node 1 = 1 - 4 - 8 - 10
+Node 2 = 2- 4 -8- 10.
+
+Shortest distance for both the paths are 6
+
+
+# Question 2
+
+
+The Bellman equation is:
+
+$$V(s,t) = min( c_{s} + V(s+1,t+1), p - rv_{s} + c_{1}+V(1,t+1))$$
+where c(s) = operating cost of a car( used for s years)
+      p = price of  car
+      rv(s) = resale value of a car (used for s years)
+      V(s,t) = lowest cost at year t for a car (used for s years)
+
+
+```{r}
+rm(list = ls())
+
+NP = 20000
+RV = c(14000,12000,8000,6000,4000,2000)
+c = c(600,1000,1600,2400,3200,4400)
+T = 6
+
+V = matrix(NA,nrow = T, ncol = T) 
+## columns- year
+##rows - number of years for which the car has been used
+
+tvalues = seq(1,6)
+svalues = seq(1:6)
+
+rownames(V) = svalues
+colnames(V) = tvalues
+
+names(c) = svalues
+names(RV) = svalues
+
+U =V
+
+t = tvalues[T]
+
+V[,paste(t)] = -RV
+
+for (j in rev(tvalues[1:T-1])){
+  for (i in svalues[1:j]){
+    v_no_r = V[paste(i+1),paste(j+1)] + c[paste(i+1)]
+    v_r = V[paste(1),paste(j+1)]+ NP - RV[paste(i)] + c[paste(1)]
+    V[paste(i),paste(j)] = min(c(v_no_r,v_r))
+    U[paste(i),paste(j)] = which.min(c(v_no_r,v_r))
+  }
+}
+
+print(U)
+
+```
+
+### We should keep  the car for the first 2 years, replace and keep again for 2 years ( year 4) and sell it off at the end of year 6. The total cost would be 8800(not considering the intial investment of 20000)
+
+
+# Question 3
+
+
+The Bellman equation is:
+
+$$V(i,t) = max_{j = 1,2,3}( V(j,t+1)+ E_{i} - TC_{i,j})$$
+where e = earnings
+      c = travelling cost from i to j
+      V(i,t) = value when he is at place i( on day t)
+      j = 1 Indianapolis 
+      2 = Blomington
+      3 = Chicago
+
+
+
+## t = 4
+
+He is required at IndianaPolis, hence negative(infinity) is assigned V(2,4) and V(3,4) 
+
+## t= 3
+
+$$ V(1,3) = max_{j = 1,2,3}(V(j,4)+E_{1} - TC_{1,j}) = 120 $$
+$$ V(2,3) = max_{j = 1,2,3}(V(j,4)+E_{2} - TC_{2,j}) = 160-50 = 110 $$
+$$ V(3,3) = max_{j = 1,2,3}(V(j,4)+E_{3} - TC_{3,j}) = 170-20 = 150 $$
+## t = 2
+
+$$ V(1,2) = max_{j = 1,2,3}(V(j,3)+E_{1} - TC_{1,j}) = max(120+120, 120 - 50 + 110 , 120 - 20 + 150) = 250 $$
+$$ V(2,2) = max_{j = 1,2,3}(V(j,3)++E_{2} - TC_{2,j}) = max(160 - 50 + 120, 160 + 110 , 160 - 70 + 150) = 270 $$
+$$ V(3,2) = max_{j = 1,2,3}(V(j,3)+E_{3} - TC_{3,j}) = max(170 - 20 + 120, 170 -70 + 110 , 170  + 150) = 320 $$
+
+## t = 1
+
+$$ V(1,1) = max_{j = 1,2,3}(V(j,2)+E_{1} - TC_{1,j}) = max(120+250, 120 - 50 + 270 , 120 - 20 + 320) = 420 $$
+$$ V(2,1) = max_{j = 1,2,3}(V(j,2)+E_{2} - TC_{2,j}) = max(160 - 50 + 250, 160+ 270 , 160 - 70 + 320) = 430 $$
+$$ V(3,1) = max_{j = 1,2,3}(V(j,2)+E_{3} - TC_{3,j}) = max(170 - 20 +250, 170 - 70 + 270 , 170 + 320) = 490 $$
+
+
+If he is at Bloomington, we have, 
+
+$$ V(2,0) = max_{j = 1,2,3}(V(j,1)+TC_{2,j} + ) = max(370,430,420) = 430 $$
+
+### It is not precisely Bellman's equation.
+
+### Closest optimum solution will be to be at Bloomington, stay there for the first 3 days and then go to Indianapolis
+
+
+
+# Question 4
+
+## states
+
+$$ state variable = [s,t]$$
+where t = year 
+      s = time used by machine in years at time t
+      
+
+## Bellman equation is:
+
+Condition 1:  s+1 < n
+
+$$ v(s,t) = max(-c + p(0)+ v(1,t+1), p(s)+v(s+1,t+1))$$
+
+Condition 2:
+
+$$ v(s,t) = -c + p(0)+ v(1,t+1)$$
+
+
+# Question 5
+SuperMarket chain purchases 6 gallons of milk - sells at three stores
+HEB purchase rate - $1
+HEB selling rate - $2
+Unused milk - 50cents
+
+Cost price - $1
+Selling price - $2
+unused- 50 cents
+
+
+The Bellman equation is:
+
+$$ V(x,s) = max_{x in (0 to 6)} (min(x, d(s))*1 - max (0, x-d(s))*0.5 + V(6 -x, s+1))$$ 
+where V(x,s) - x gallons of milk sent to store s
+      d(s)  - demand at store s
+      
+
+
+
+```{r}
+
+rm(list = ls())
+
+dem = c(1.8,1.9,1.9) ## expected demand-value
+
+profGains = rep(0,6)
+opt = rep(0,3)
+optProfit = rep(0,3)
+
+for (s in 1:3){
+  for (x in 0:6){
+
+      v = (min(x,dem[s])*1) - (max(0,x-dem[s])*0.5)
+      profGains[x] = v
+      opt[s] = which.max(profGains)
+      optProfit[s] = max(profGains)
+}
+}
+
+sum(optProfit)
+```
+
+
+Optimal solution - alloting 2 gallons of milk at each store @ profit of $5.4

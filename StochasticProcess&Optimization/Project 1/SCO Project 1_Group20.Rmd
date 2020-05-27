@@ -1,0 +1,201 @@
+---
+title: "SCO Project 1 - Group 20"
+author: "Aadithya Anandaraj, Anisha Alluru, Khyathi Balusu"
+date: "2/9/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+load("Project1.RData")
+```
+
+
+# Q1
+
+# Part 1
+The decision variables are the amounts invested in each campaign.
+
+The objective at hand is to maximize the ROI of the investment which is given by
+$$(0.031*Print) + (0.049*TV) + (0.024*SEO) + (0.039*AdWords) + (0.016*Facebook) + (0.024*LinkedIn) + (0.046*Instagram) + (0.026*Snapchat) + (0.033*Twitter) + (0.044*Email)$$
+The constraints are as follows:
+a.
+$$Print + TV <= Facebook + Email$$
+$$Print + TV - Facebook - Email<= 0$$
+
+b.
+$$Facebook + LinkedIn + Instagram + Snapchat + Twitter >= 2*(SEO + AdWords)$$
+$$Facebook + LinkedIn + Instagram + Snapchat + Twitter - 2*SEO - 2*AdWords >= 0$$
+
+c.
+$$Print <= 3, TV<=3, SEO<=3 ..... Email<=3$$
+
+d. Budget Constraint
+$$Print + TV + SEO + .... + Twitter + Email <=10$$
+e.
+$$Print,TV,SEO, .... ,Twitter,Email >=0 $$
+
+```{r}
+library(lpSolve)
+c=rep(c(0.031, 0.049, 0.024, 0.039, 0.016, 0.024, 0.046, 0.026, 0.033, 0.044))
+A=matrix(0,13,10)
+A[1,1:10]=c(1,1,0,0,-1,0,0,0,0,-1)
+A[2,1:10]=c(0,0,-2,-2,1,1,1,1,1,0)
+A[3:12,1:10]=diag(10)
+A[13,1:10]=rep(1,10)
+A
+dir=c("<=",'>=','<=',rep('<=',10))
+B=c(0,0,rep(3,10),10)
+```
+
+# Part 2
+```{r}
+alc1=lp("max",c,A,dir,B)
+alc1$solution
+alc1$objval
+```
+
+# Part 3
+```{r}
+library(base)
+#setwd('D:/ANISHA/DOCUMENTS/Studies/MSBA/Course Work/Spring 2019/Stochastic Control and Optimization/Group Projects/Project 1')
+source('allocation_g20.R')
+result = allocation(c(0.031, 0.049, 0.024, 0.039, 0.016, 0.024, 0.046, 0.026, 0.033, 0.044), 3, 10)
+result$objval
+result$solution
+```
+
+# Part 4
+```{r}
+library(base)
+#setwd('D:/ANISHA/DOCUMENTS/Studies/MSBA/Course Work/Spring 2019/Stochastic Control and Optimization/Group Projects/Project 1')
+#source(allocation_g20.R)
+alc2 = allocation(c(0.031, 0.049, 0.024, 0.039, 0.016, 0.024, 0.046, 0.026, 0.033, 0.044), 10, 10)
+cat('Without upper bound constraint:\n')
+alc2$objval
+alc2$solution
+
+cat('With upper bound constraint:\n')
+alc1$objval
+alc1$solution
+
+cat('The difference in both objective values is ', alc2$objval-alc1$objval)
+```
+# Q2
+
+#Part 1
+
+Using the new ROI vector,
+
+```{r}
+library(base)
+#setwd('D:/ANISHA/DOCUMENTS/Studies/MSBA/Course Work/Spring 2019/Stochastic Control and Optimization/Group Projects/Project 1')
+#source(allocation_g20.R)
+alc3 = allocation(c(0.049, 0.023, 0.024, 0.039, 0.044, 0.046, 0.026, 0.019, 0.037, 0.026), 3, 10)
+cat('With upper bound constraint and new ROI:\n')
+alc3$objval
+alc3$solution
+```
+The objective value is the same as their counterparts using the previous ROI vector, but the allocation is different.
+
+#Part 2
+
+```{r}
+library(base)
+#setwd('D:/ANISHA/DOCUMENTS/Studies/MSBA/Course Work/Spring 2019/Stochastic Control and Optimization/Group Projects/Project 1')
+#source(allocation_g20.R)
+alc1_new_obj=((0.023*3)+(0.039*1)+(0.026*3)+(0.026*3))
+alc2_new_obj=((0.023*5)+(0.026*5))
+disappointment_alc1 = alc1$objval - alc1_new_obj
+disappointment_alc2 = alc2$objval - alc2_new_obj
+
+cat('Disappointment alc1')
+disappointment_alc1
+cat('Disappointment alc2')
+disappointment_alc2
+```
+
+The 3rd constraint is valuable as relaxing the upper bound has a higher disappointment.
+
+#Part 3
+```{r}
+library(base)
+#setwd('D:/ANISHA/DOCUMENTS/Studies/MSBA/Course Work/Spring 2019/Stochastic Control and Optimization/Group Projects/Project 1')
+#source(allocation_g20.R)
+
+alc1_avg=(alc1$objval+alc1_new_obj)/2
+alc2_avg=(alc2$objval+alc2_new_obj)/2
+
+alc3_old_obj=((0.031*3)+(0.039*1)+(0.016*3)+(0.024*3))
+alc3_avg=(alc3_old_obj+alc3$objval)/2
+
+#tweaking the ROI vector
+old_ROI=c(0.031, 0.049, 0.024, 0.039, 0.016, 0.024, 0.046, 0.026, 0.033, 0.044)
+new_ROI=c(0.049, 0.023, 0.024, 0.039, 0.044, 0.046, 0.026, 0.019, 0.037, 0.026)
+avg_ROI=(old_ROI+new_ROI)/2
+avg_ROI
+
+alc=allocation(c(avg_ROI), 4, 10)
+cat('The solution is')
+alc$solution
+cat('Objective value')
+alc$objval
+cat('Average objective value of alc1')
+alc1_avg
+cat('Average objective value of alc2')
+alc2_avg
+cat('Average objective value of alc3')
+alc3_avg
+```
+By tweaking the ROI vector to be the average of the old and the new ROI vector and changing the upper bound to 4, we obtained the allocation above that dominates the average objective values of the previous (alc1,alc2,alc3). 
+
+
+# Q3
+
+# Part1
+
+```{r}
+monthBudget = 10
+
+A<-matrix(0,13,10)
+A[1,]<-c(1,1,0,0,-1,0,0,0,0,-1)
+A[2,]<-c(0,0,2,2,-1,-1,-1,-1,-1,0)
+A[3,]<-c(rep(1,10))
+A[4:13,]<-diag(10)
+
+dir<-c(rep("<=",13))
+
+
+outputMatrix = matrix(0,12,10)
+
+for (i in 1:12){
+  #objective coefficients
+  monthROI<-c(ROI_mat[i,]/100)
+  
+  b<-c(0,0,monthBudget,rep(3,10))
+  
+  monthAllocation=lp("max",monthROI,A,dir,b,compute.sens = 1)
+  
+  
+  monthSolution=monthAllocation$solution
+  monthObjective=monthAllocation$objval
+  
+  outputMatrix[i,] = monthSolution
+  monthBudget = monthBudget + 0.5*monthObjective
+}
+
+print (outputMatrix)
+
+
+```
+
+# Part2
+
+Multi period allocation is the iteration run over monthly budget of the previous month. This would make the first year's investment same irrespective of multi period or previous problem's single problem allocation.
+
+# Part 3
+
+With the newly added constraints, this solution would not hold good. If the monthly change should be no more than 1M, for a stable relationship with each platform given, then with the constrains, the first year solutions would wary.
+
+
+
